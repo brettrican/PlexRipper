@@ -4,12 +4,19 @@ using PlexRipper.Application.Common.Interfaces;
 
 namespace PlexRipper.WebAPI.Features.DownloadLinks;
 
+/// <summary>
+/// Controller for managing download links
+/// </summary>
 [Route("api/[controller]")]
 [ApiController]
-public class DownloadLinksController : BaseApiController
+public class DownloadLinksController : ControllerBase
 {
     private readonly IDownloadLinkService _downloadLinkService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DownloadLinksController"/> class
+    /// </summary>
+    /// <param name="downloadLinkService">The download link service</param>
     public DownloadLinksController(IDownloadLinkService downloadLinkService)
     {
         _downloadLinkService = downloadLinkService;
@@ -23,7 +30,9 @@ public class DownloadLinksController : BaseApiController
     /// <returns>List of download links</returns>
     [HttpGet]
     [ProducesResponseType(typeof(List<DownloadLinkDTO>), 200)]
-    public async Task<IActionResult> GetDownloadLinks([FromQuery] bool includeCompleted = false, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetDownloadLinks(
+        [FromQuery] bool includeCompleted = false,
+        CancellationToken cancellationToken = default)
     {
         var result = await _downloadLinkService.GetDownloadLinksAsync(includeCompleted, cancellationToken);
         return new OkObjectResult(result);
@@ -38,7 +47,9 @@ public class DownloadLinksController : BaseApiController
     [HttpGet("text")]
     [Produces("text/plain")]
     [ProducesResponseType(typeof(string), 200)]
-    public async Task<IActionResult> GetDownloadLinksAsText([FromQuery] bool includeCompleted = false, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetDownloadLinksAsText(
+        [FromQuery] bool includeCompleted = false,
+        CancellationToken cancellationToken = default)
     {
         var result = await _downloadLinkService.GetDownloadLinksAsTextListAsync(includeCompleted, cancellationToken);
         return Content(result, "text/plain");
@@ -53,12 +64,14 @@ public class DownloadLinksController : BaseApiController
     [HttpGet("download")]
     [Produces("text/plain")]
     [ProducesResponseType(typeof(FileContentResult), 200)]
-    public async Task<IActionResult> DownloadLinksFile([FromQuery] bool includeCompleted = false, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> DownloadLinksFile(
+        [FromQuery] bool includeCompleted = false,
+        CancellationToken cancellationToken = default)
     {
         var content = await _downloadLinkService.GetDownloadLinksAsTextListAsync(includeCompleted, cancellationToken);
         var fileName = $"plex_download_links_{DateTime.UtcNow:yyyyMMddHHmmss}.txt";
         
-        Response.Headers.Add("Content-Disposition", $"attachment; filename={fileName}");
+        Response.Headers["Content-Disposition"] = $"attachment; filename={fileName}";
         return Content(content, "text/plain");
     }
 }

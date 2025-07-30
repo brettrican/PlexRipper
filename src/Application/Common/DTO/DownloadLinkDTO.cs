@@ -1,14 +1,9 @@
-using PlexRipper.Domain;
-
 namespace PlexRipper.Application.Common.DTO;
 
 public class DownloadLinkDTO
 {
-    public int Id { get; set; }
     public string Title { get; set; } = string.Empty;
-    public string FileName { get; set; } = string.Empty;
-    public string DownloadUrl { get; set; } = string.Empty;
-    public long FileSize { get; set; }
-    public DownloadStatus Status { get; set; }
-    public PlexMediaType MediaType { get; set; }
+    public string Url { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
 }

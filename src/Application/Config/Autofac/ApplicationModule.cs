@@ -1,7 +1,7 @@
-using Application.Common.Interfaces;
 using Application.Contracts;
 using Autofac;
-using FileSystem.Contracts;
+using PlexRipper.Application.Common.Interfaces;
+using PlexRipper.Application.Common.Services;
 using Module = Autofac.Module;
 
 namespace PlexRipper.Application;
@@ -16,7 +16,6 @@ public class ApplicationModule : Module
     {
         builder.RegisterType<DownloadQueue>().As<IDownloadQueue>().SingleInstance();
         builder.RegisterType<DownloadTaskScheduler>().As<IDownloadTaskScheduler>().SingleInstance();
-        builder.RegisterType<FileMergeScheduler>().As<IFileMergeScheduler>().SingleInstance();
         builder.RegisterType<FileMergeQueue>().As<IFileMergeQueue>().SingleInstance();
         builder.RegisterType<DownloadWorker>().InstancePerDependency();
         builder.RegisterType<PlexDownloadClient>().As<IPlexDownloadClient>().InstancePerDependency();

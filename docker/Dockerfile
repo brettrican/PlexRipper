@@ -65,15 +65,26 @@ COPY ["src/WebAPI/WebAPI.csproj", "src/WebAPI/"]
 COPY ["src/WebAPI.Contracts/WebAPI.Contracts.csproj", "src/WebAPI.Contracts/"]
 
 
-## Restore Projects
-RUN dotnet restore "src/WebAPI/WebAPI.csproj" --locked-mode
+## Copy source files (excluding docker-compose project)
+COPY ./src ./src
+COPY ./*.sln ./
 
-COPY . .
+## Create a temporary solution file without the docker-compose project
+RUN dotnet new sln -n PlexRipper.Temp && \
+    for project in $(find ./src -name "*.csproj" | grep -v "docker-compose"); do \
+        dotnet sln PlexRipper.Temp.sln add "$project"; \
+    done
+
+## Restore and build the solution
+WORKDIR /src
+RUN dotnet restore "PlexRipper.Temp.sln"
+
+## Build the solution
+RUN dotnet build "PlexRipper.Temp.sln" -c Release --no-restore
+
+## Publish the WebAPI project
 WORKDIR "/src/src/WebAPI"
-
-## Build and Publish
-RUN dotnet build "WebAPI.csproj" -c Release -o /app/build /p:AssemblyVersion=$VERSION  /p:InformationalVersion=$INFORMATIONAL_VERSION --no-restore
-RUN dotnet publish "WebAPI.csproj" -c Release -o /app/publish /p:AssemblyVersion=$VERSION  /p:InformationalVersion=$INFORMATIONAL_VERSION
+RUN dotnet publish "WebAPI.csproj" -c Release -o /app/publish /p:AssemblyVersion=$VERSION /p:InformationalVersion=$INFORMATIONAL_VERSION
 
 # Stage 3 - Runtime Image
 FROM --platform=$TARGETPLATFORM ghcr.io/linuxserver/baseimage-alpine:3.20 AS final

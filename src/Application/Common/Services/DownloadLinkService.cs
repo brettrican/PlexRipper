@@ -1,6 +1,10 @@
 using System.Text;
+using Data.Contracts;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PlexRipper.Application.Common.DTO;
 using PlexRipper.Application.Common.Interfaces;
+using PlexRipper.Data;
 using PlexRipper.Domain;
 
 namespace PlexRipper.Application.Common.Services;
@@ -8,19 +12,20 @@ namespace PlexRipper.Application.Common.Services;
 public class DownloadLinkService : IDownloadLinkService
 {
     private readonly IPlexRipperDbContext _dbContext;
-    private readonly ILog _log;
+    private readonly ILogger _log;
 
-    public DownloadLinkService(IPlexRipperDbContext dbContext, ILog log)
+    public DownloadLinkService(
+        IPlexRipperDbContext dbContext, 
+        ILogger<DownloadLinkService> log)
     {
         _dbContext = dbContext;
         _log = log;
     }
 
-    public async Task<List<DownloadLinkDTO>> GetDownloadLinksAsync(bool includeCompleted = false, CancellationToken cancellationToken = default)
+    public async Task<List<DownloadLinkDTO>> GetDownloadLinksAsync(
+        bool includeCompleted = false, 
+        CancellationToken cancellationToken = default)
     {
-        var result = new List<DownloadLinkDTO>();
-        
-        // Get all download tasks that are either queued, downloading, or completed (if includeCompleted is true)
         var statuses = new List<DownloadStatus>
         {
             DownloadStatus.Queued,
@@ -31,61 +36,67 @@ public class DownloadLinkService : IDownloadLinkService
 
         if (includeCompleted)
         {
-            statuses.Add(DownloadStatus.Completed);
+            statuses.AddRange(new[]
+            {
+                DownloadStatus.DownloadFinished,
+                DownloadStatus.MergeFinished,
+                DownloadStatus.MoveFinished,
+                DownloadStatus.Completed
+            });
         }
 
-        // Get movie downloads
+        // Get movie files
         var movieFiles = await _dbContext.DownloadTaskMovieFile
+            .Include(x => x.PlexServer)
+            .Include(x => x.PlexLibrary)
             .Where(x => statuses.Contains(x.DownloadStatus))
             .ToListAsync(cancellationToken);
 
-        // Get TV show episode downloads
+        // Get TV show episode files
         var episodeFiles = await _dbContext.DownloadTaskTvShowEpisodeFile
+            .Include(x => x.PlexServer)
+            .Include(x => x.PlexLibrary)
             .Where(x => statuses.Contains(x.DownloadStatus))
             .ToListAsync(cancellationToken);
 
-        // Process movie downloads
-        foreach (var movie in movieFiles)
-        {
-            var downloadUrl = await _dbContext.GetDownloadUrl(movie.PlexServerId, movie.FileLocationUrl, cancellationToken);
-            if (downloadUrl.IsFailed)
-            {
-                _log.Warning("Failed to get download URL for movie {MovieTitle} (ID: {MovieId})", movie.FileName, movie.Id);
-                continue;
-            }
+        var result = new List<DownloadLinkDTO>();
 
-            result.Add(new DownloadLinkDTO
+        // Process movie files
+        foreach (var movieFile in movieFiles)
+        {
+            var urlResult = await _dbContext.GetDownloadUrl(
+                movieFile.PlexServerId,
+                movieFile.FileLocationUrl, cancellationToken);
+
+            if (urlResult.IsSuccess)
             {
-                Id = movie.Id,
-                Title = movie.FileName,
-                FileName = movie.FileName,
-                DownloadUrl = downloadUrl.Value,
-                FileSize = movie.DataTotal,
-                Status = movie.DownloadStatus,
-                MediaType = PlexMediaType.Movie
-            });
+                result.Add(new DownloadLinkDTO
+                {
+                    Title = movieFile.Title,
+                    Url = urlResult.Value,
+                    Type = "Movie",
+                    Status = movieFile.DownloadStatus.ToString()
+                });
+            }
         }
 
-        // Process TV show episode downloads
-        foreach (var episode in episodeFiles)
+        // Process TV show episodes
+        foreach (var episodeFile in episodeFiles)
         {
-            var downloadUrl = await _dbContext.GetDownloadUrl(episode.PlexServerId, episode.FileLocationUrl, cancellationToken);
-            if (downloadUrl.IsFailed)
-            {
-                _log.Warning("Failed to get download URL for episode {EpisodeTitle} (ID: {EpisodeId})", episode.FileName, episode.Id);
-                continue;
-            }
+            var urlResult = await _dbContext.GetDownloadUrl(
+                episodeFile.PlexServerId,
+                episodeFile.FileLocationUrl, cancellationToken);
 
-            result.Add(new DownloadLinkDTO
+            if (urlResult.IsSuccess)
             {
-                Id = episode.Id,
-                Title = episode.FileName,
-                FileName = episode.FileName,
-                DownloadUrl = downloadUrl.Value,
-                FileSize = episode.DataTotal,
-                Status = episode.DownloadStatus,
-                MediaType = PlexMediaType.Episode
-            });
+                result.Add(new DownloadLinkDTO
+                {
+                    Title = episodeFile.FullTitle,
+                    Url = urlResult.Value,
+                    Type = "TV Show",
+                    Status = episodeFile.DownloadStatus.ToString()
+                });
+            }
         }
 
         return result;
@@ -98,9 +109,11 @@ public class DownloadLinkService : IDownloadLinkService
         
         foreach (var link in links)
         {
-            sb.AppendLine(link.DownloadUrl);
+            sb.AppendLine($"# {link.Type}: {link.Title}");
+            sb.AppendLine(link.Url);
+            sb.AppendLine();
         }
         
-        return sb.ToString();
+        return sb.ToString().TrimEnd();
     }
 }
