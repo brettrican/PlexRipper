@@ -1,4 +1,5 @@
-﻿using Application.Contracts;
+using Application.Common.Interfaces;
+using Application.Contracts;
 using Autofac;
 using FileSystem.Contracts;
 using Module = Autofac.Module;
@@ -29,5 +30,11 @@ public class ApplicationModule : Module
             .RegisterType<RefreshLibraryProgressReporter>()
             .As<IRefreshLibraryProgressReporter>()
             .InstancePerDependency();
+
+        // Register DownloadLinkService
+        builder
+            .RegisterType<DownloadLinkService>()
+            .As<IDownloadLinkService>()
+            .InstancePerLifetimeScope();
     }
 }
