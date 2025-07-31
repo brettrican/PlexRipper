@@ -1,7 +1,9 @@
 using Application.Contracts;
 using Autofac;
+using FileSystem.Contracts;
 using PlexRipper.Application.Common.Interfaces;
 using PlexRipper.Application.Common.Services;
+using PlexRipper.Application;
 using Module = Autofac.Module;
 
 namespace PlexRipper.Application;
@@ -35,5 +37,11 @@ public class ApplicationModule : Module
             .RegisterType<DownloadLinkService>()
             .As<IDownloadLinkService>()
             .InstancePerLifetimeScope();
+            
+        // Register FileMergeScheduler
+        builder
+            .RegisterType<FileMergeScheduler>()
+            .As<IFileMergeScheduler>()
+            .SingleInstance();
     }
 }

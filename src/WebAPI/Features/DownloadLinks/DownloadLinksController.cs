@@ -14,9 +14,9 @@ public class DownloadLinksController : ControllerBase
     private readonly IDownloadLinkService _downloadLinkService;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="DownloadLinksController"/> class
+    /// Initializes a new instance of the <see cref="DownloadLinksController"/> class.
     /// </summary>
-    /// <param name="downloadLinkService">The download link service</param>
+    /// <param name="downloadLinkService">The download link service.</param>
     public DownloadLinksController(IDownloadLinkService downloadLinkService)
     {
         _downloadLinkService = downloadLinkService;
@@ -71,7 +71,7 @@ public class DownloadLinksController : ControllerBase
         var content = await _downloadLinkService.GetDownloadLinksAsTextListAsync(includeCompleted, cancellationToken);
         var fileName = $"plex_download_links_{DateTime.UtcNow:yyyyMMddHHmmss}.txt";
         
-        Response.Headers["Content-Disposition"] = $"attachment; filename={fileName}";
+        Response.Headers.Append("Content-Disposition", $"attachment; filename={fileName}");
         return Content(content, "text/plain");
     }
 }

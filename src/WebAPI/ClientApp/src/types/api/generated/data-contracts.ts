@@ -111,6 +111,7 @@ export enum DownloadActions {
   Stop = "Stop",
   Clear = "Clear",
   Restart = "Restart",
+  DownloadAll = "DownloadAll",
 }
 
 export interface DownloadJobUpdateDTO {

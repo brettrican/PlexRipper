@@ -1,0 +1,23 @@
+#!/usr/bin/with-contenv bash
+
+# Set permissions on config directory
+chown -R abc:abc /Config
+chmod -R 775 /Config
+
+# Create default config if it doesn't exist
+if [ ! -f "/Config/PlexRipperSettings.json" ]; then
+    echo "Creating default config file..."
+    mkdir -p /Config
+    echo '{
+  "FirstTimeSetup": true,
+  "ActiveAccountId": 0,
+  "DownloadSegments": 4,
+  "DownloadSpeedLimit": 0,
+  "DownloadDirectory": "/Downloads",
+  "MovieDirectory": "/Movies",
+  "TvShowDirectory": "/TvShows",
+  "MusicDirectory": "/Music"
+}' > /Config/PlexRipperSettings.json
+    chown abc:abc /Config/PlexRipperSettings.json
+    chmod 664 /Config/PlexRipperSettings.json
+fi

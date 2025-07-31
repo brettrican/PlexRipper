@@ -38,6 +38,12 @@ const buttons = computed<
 >(() => {
 	return [
 		{
+			name: 'Download All',
+			value: DownloadActions.DownloadAll,
+			icon: 'mdi-download-multiple',
+			disableOnNoSelected: false,
+		},
+		{
 			name: 'Clear Completed',
 			value: DownloadActions.Clear,
 			icon: 'mdi-notification-clear-all',

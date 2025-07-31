@@ -69,11 +69,33 @@ COPY ["src/WebAPI.Contracts/WebAPI.Contracts.csproj", "src/WebAPI.Contracts/"]
 COPY ./src ./src
 COPY ./*.sln ./
 
-## Create a temporary solution file without the docker-compose project
+## Create a temporary solution file and add projects in the correct order
 RUN dotnet new sln -n PlexRipper.Temp && \
-    for project in $(find ./src -name "*.csproj" | grep -v "docker-compose"); do \
-        dotnet sln PlexRipper.Temp.sln add "$project"; \
-    done
+    # Add core dependencies first
+    dotnet sln PlexRipper.Temp.sln add src/Domain/Domain.csproj && \
+    dotnet sln PlexRipper.Temp.sln add src/Environment/Environment.csproj && \
+    dotnet sln PlexRipper.Temp.sln add src/Logging/Logging.csproj && \
+    dotnet sln PlexRipper.Temp.sln add src/FluentResultExtensions/FluentResultExtensions.csproj && \
+    \
+    # Add contracts before implementations
+    dotnet sln PlexRipper.Temp.sln add src/Application.Contracts/Application.Contracts.csproj && \
+    dotnet sln PlexRipper.Temp.sln add src/Data.Contracts/Data.Contracts.csproj && \
+    dotnet sln PlexRipper.Temp.sln add src/FileSystem.Contracts/FileSystem.Contracts.csproj && \
+    dotnet sln PlexRipper.Temp.sln add src/Identity.Contracts/Identity.Contracts.csproj && \
+    dotnet sln PlexRipper.Temp.sln add src/PlexApi.Contracts/PlexApi.Contracts.csproj && \
+    dotnet sln PlexRipper.Temp.sln add src/Settings.Contracts/Settings.Contracts.csproj && \
+    dotnet sln PlexRipper.Temp.sln add src/WebAPI.Contracts/WebAPI.Contracts.csproj && \
+    \
+    # Add implementations
+    dotnet sln PlexRipper.Temp.sln add src/Application/Application.csproj && \
+    dotnet sln PlexRipper.Temp.sln add src/Data/Data.csproj && \
+    dotnet sln PlexRipper.Temp.sln add src/FileSystem/FileSystem.csproj && \
+    dotnet sln PlexRipper.Temp.sln add src/Identity/Identity.csproj && \
+    dotnet sln PlexRipper.Temp.sln add src/PlexApi/PlexApi.csproj && \
+    dotnet sln PlexRipper.Temp.sln add src/Settings/Settings.csproj && \
+    \
+    # Add WebAPI last
+    dotnet sln PlexRipper.Temp.sln add src/WebAPI/WebAPI.csproj
 
 ## Restore and build the solution
 WORKDIR /src
@@ -130,7 +152,7 @@ COPY --from=back-end /app/publish .
 COPY --from=client-build /tmp/ClientApp/.output/public /app/wwwroot
 
 ## Copy the s6-overlay config files
-COPY docker/etc/ /etc/
+COPY etc/ /etc/
 
 ## Set version label
 LABEL company="PlexRipper" \

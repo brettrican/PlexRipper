@@ -6,22 +6,35 @@
         <Nullable>enable</Nullable>
         <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Domain\Domain.csproj"/>
-        <ProjectReference Include="..\WebAPI.Contracts\WebAPI.Contracts.csproj"/>
+        <ProjectReference Include="..\Domain\Domain.csproj" />
+        <ProjectReference Include="..\WebAPI.Contracts\WebAPI.Contracts.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <FrameworkReference Include="Microsoft.AspNetCore.App"/>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Autofac" Version="8.0.0" />
         <PackageReference Include="CSharpier.MsBuild" Version="0.29.2">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Quartz" Version="3.13.0"/>
+        <PackageReference Include="FluentResults" Version="3.16.0" />
+        <PackageReference Include="MediatR" Version="12.4.1" />
+        <PackageReference Include="Quartz" Version="3.13.0" />
+    </ItemGroup>
+
+    <!-- Include all .cs files in the project -->
+    <ItemGroup>
+        <Compile Include="**\*.cs" Exclude="bin\**;obj\**;$(BaseIntermediateOutputPath)\**;$(BaseOutputPath)\**;@(Compile)" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Folder Include="Properties\" />
     </ItemGroup>
 </Project>

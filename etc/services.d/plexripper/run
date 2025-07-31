@@ -1,0 +1,4 @@
+#!/usr/bin/with-contenv bash
+
+# Start PlexRipper
+exec s6-setuidgid abc dotnet /app/PlexRipper.WebAPI.dll

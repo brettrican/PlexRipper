@@ -4,22 +4,22 @@ services:
         container_name: PlexRipper
         image: plexripper/plexripper:latest
         build:
-            context: .
-            dockerfile: ./Dockerfile
+            context: ..
+            dockerfile: docker/Dockerfile
         ports:
             # Web UI & Web API
-            - '7000:7000'
+            - '7001:7000'
         restart: unless-stopped
         environment:
             - PUID=1000
             - PGID=1000
-            - TZ=America/New_York
+            - TZ=America/Chicago
             - LOG_LEVEL=INFORMATION # Set the logging level in the docker logging
             - LOG_ENV_VARS=false # Enable Log dump of all available ENV variables on PlexRipper startup
             - UNMASKED=false # Unmask sensitive data in logs if true
         volumes:
             # The paths /mnt/TURBO/PlexRipperDockerCache/ are examples, and you will need valid paths on your device with write permission.
-            - /mnt/TURBO/PlexRipperDockerCache/Config:/Config
-            - /mnt/TURBO/PlexRipperDockerCache/Downloads:/Downloads
-            - /mnt/TURBO/PlexRipperDockerCache/Movies:/Movies
-            - /mnt/TURBO/PlexRipperDockerCache/TvShows:/TvShows
+            - /Volumes/CodingDrive/plexripper/PlexRipper/docker/Config:/Config
+            - /Volumes/CodingDrive/plexripper/PlexRipper/docker/Downloads:/Downloads
+            - /Volumes/CodingDrive/plexripper/PlexRipper/docker/Movies:/Movies
+            - /Volumes/CodingDrive/plexripper/PlexRipper/docker/TvShows:/TvShows
