@@ -44,6 +44,16 @@
 			cy="media-overview-bar-download-button"
 			@click="downloadCommandBus.emit('download')" />
 
+		<!--	Download All button	-->
+		<VerticalButton
+			v-if="mediaOverviewStore.showDownloadButton"
+			:height="barHeight"
+			:label="$t('general.commands.download-all')"
+			:width="verticalButtonWidth"
+			icon="mdi-download-multiple"
+			cy="media-overview-bar-download-all-button"
+			@click="downloadCommandBus.emit('download-all')" />
+
 		<!--	Selection Dialog Button	-->
 		<VerticalButton
 			v-if="mediaOverviewStore.showSelectionButton"

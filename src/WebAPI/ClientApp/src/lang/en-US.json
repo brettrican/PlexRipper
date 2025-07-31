@@ -393,7 +393,8 @@
             "download": "Download",
             "refresh": "Refresh",
             "view": "View",
-            "media-options": "Options"
+            "media-options": "Options",
+            "download-all": "Download All"
         },
         "name-version": "PlexRipper - V{version}",
         "units": {

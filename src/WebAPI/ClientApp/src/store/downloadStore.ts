@@ -75,6 +75,32 @@ export const useDownloadStore = defineStore('DownloadStore', () => {
 					return downloadApi.restartDownloadTaskEndpoint(downloadTaskId);
 				case DownloadActions.Start:
 					return downloadApi.startDownloadTaskEndpoint(downloadTaskId);
+				case DownloadActions.DownloadAll:
+					// Get all downloadable task IDs from all servers
+					const allTaskIds = state.serverDownloads.flatMap(server => 
+						server.downloads
+						.filter(task => task.status === DownloadStatus.Queued || task.status === DownloadStatus.Paused)
+						.map(task => task.id.toString())
+					);
+					
+					if (allTaskIds.length === 0) {
+						Log.info('No downloadable tasks found');
+						return of();
+					}
+					
+					// Start all downloadable tasks
+					return forkJoin(
+						allTaskIds.map(id => downloadApi.startDownloadTaskEndpoint(id))
+					).pipe(
+						tap(() => {
+							Log.info(`Started ${allTaskIds.length} downloads`);
+						}),
+						catchError(error => {
+							Log.error('Error starting downloads', error);
+							return of();
+						}),
+						switchMap(() => actions.fetchDownloadList())
+					);
 				default:
 					Log.error(`Action: ${action} does not have a assigned command with payload: ${downloadTaskIds}`);
 					return of();

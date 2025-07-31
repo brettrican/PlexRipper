@@ -210,14 +210,39 @@ listenMediaOverviewDownloadCommand((command) => {
 	}
 });
 
-useMediaOverviewBarDownloadCommandBus().on(() => {
-	const downloadCommand: DownloadMediaDTO = {
-		plexServerId: libraryStore.getServerByLibraryId(mediaOverviewStore.libraryId)?.id ?? 0,
-		plexLibraryId: mediaOverviewStore.libraryId,
-		mediaIds: mediaOverviewStore.selection.keys,
-		type: props.mediaType,
-	};
-	sendMediaOverviewDownloadCommand([downloadCommand]);
+// Handle regular download command (selected items)
+useMediaOverviewBarDownloadCommandBus().on((event) => {
+	if (event === 'download') {
+		const downloadCommand: DownloadMediaDTO = {
+			plexServerId: libraryStore.getServerByLibraryId(mediaOverviewStore.libraryId)?.id ?? 0,
+			plexLibraryId: mediaOverviewStore.libraryId,
+			mediaIds: mediaOverviewStore.selection.keys,
+			type: props.mediaType,
+		};
+		sendMediaOverviewDownloadCommand([downloadCommand]);
+	} else if (event === 'download-all') {
+		// Get all media IDs from the current view
+		const allMediaIds = mediaOverviewStore.items.map(item => item.id);
+		
+		if (allMediaIds.length > 0) {
+			const downloadCommand: DownloadMediaDTO = {
+				plexServerId: libraryStore.getServerByLibraryId(mediaOverviewStore.libraryId)?.id ?? 0,
+				plexLibraryId: mediaOverviewStore.libraryId,
+				mediaIds: allMediaIds,
+				type: props.mediaType,
+			};
+			
+			if (settingsStore.isConfirmationEnabled(props.mediaType)) {
+				dialogStore.openMediaConfirmationDownloadDialog([downloadCommand]);
+			} else {
+				downloadStore.downloadMedia({
+					customDestinationFolderPath: '',
+					destinationFolderPathId: null,
+					downloadMedias: [downloadCommand],
+				});
+			}
+		}
+	}
 });
 
 useMediaOverviewSortBus().on((event) => {
